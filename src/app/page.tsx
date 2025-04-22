@@ -23,7 +23,12 @@ ChartJS.register(
 );
 
 export default function Home() {
-  const [data, setData] = useState<any[]>([]);
+  interface WaterLevel {
+    created_at: string;
+    water_level: number;
+  }
+
+  const [data, setData] = useState<WaterLevel[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
