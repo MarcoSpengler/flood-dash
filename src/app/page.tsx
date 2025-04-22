@@ -64,11 +64,26 @@ export default function Home() {
     scales: {
       x: {
         type: "time" as const,
-        time: { unit: "hour" },
-        title: { display: true, text: "Zeit" },
+        time: {
+          unit: "hour" as const,
+          displayFormats: {
+            hour: "HH:mm",
+          },
+        },
+        title: {
+          display: true,
+          text: "Zeit (HH:mm)",
+        },
+        ticks: {
+          autoSkip: true,
+          maxTicksLimit: 10,
+        },
       },
       y: {
-        title: { display: true, text: "Wasserstand (mm)" },
+        title: {
+          display: true,
+          text: "Wasserstand (mm)",
+        },
       },
     },
   };
