@@ -58,6 +58,10 @@ export default function Home() {
     fetchData();
   }, [range]);
 
+  // Calculate time range for chart x-axis
+  const fromDate = getFromDate();
+  const toDate = new Date();
+
   const chartData = {
     labels: data.map((d) => new Date(d.created_at)),
     datasets: [
@@ -77,6 +81,8 @@ export default function Home() {
     scales: {
       x: {
         type: "time" as const,
+        min: fromDate.getTime(),
+        max: toDate.getTime(),
         time: {
           unit: "hour" as const,
           displayFormats: {
