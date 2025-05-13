@@ -35,11 +35,11 @@ export default function Home() {
   const [range, setRange] = useState<"1h" | "6h" | "24h" | "7d">("24h");
   const [isLoading, setIsLoading] = useState(true);
   const [latestLevel, setLatestLevel] = useState<number | null>(null);
-  const [sensorInfo, setSensorInfo] = useState({
+  const sensorInfo = {
     name: "Prototype",
     location: "portable",
     coordinates: { lat: 47.7148527772346, lng: 10.314041233282435 },
-  });
+  };
 
   const getFromDate = () => {
     const now = new Date();
@@ -84,6 +84,7 @@ export default function Home() {
       toast.success("Link copied to clipboard!");
     } catch (err) {
       toast.error("Failed to copy link");
+      console.error(err);
     }
   };
 
