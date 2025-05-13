@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Line } from "react-chartjs-2";
 import {
@@ -41,14 +41,14 @@ export default function Home() {
     coordinates: { lat: 47.7148527772346, lng: 10.314041233282435 },
   };
 
-  const getFromDate = () => {
+  const getFromDate = useCallback(() => {
     const now = new Date();
     if (range === "1h") now.setHours(now.getHours() - 1);
     else if (range === "6h") now.setHours(now.getHours() - 6);
     else if (range === "24h") now.setHours(now.getHours() - 24);
     else now.setDate(now.getDate() - 7);
     return now;
-  };
+  }, [range]);
 
   const [data, setData] = useState<WaterLevel[]>([]);
 
@@ -75,7 +75,7 @@ export default function Home() {
     };
 
     fetchData();
-  }, [range]);
+  }, [getFromDate]);
 
   const handleShare = async () => {
     const url = `${window.location.origin}/sensor/${sensorInfo.name}?range=${range}`;
