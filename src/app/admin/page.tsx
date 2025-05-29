@@ -5,13 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Pencil,
-  Save,
-  MapPin,
-  AlignVerticalJustifyCenter,
-  Ruler,
-} from "lucide-react";
+import { Save, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
 interface Device {

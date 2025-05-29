@@ -48,7 +48,8 @@ export default function Home() {
     const searchParams = new URLSearchParams(window.location.search);
     const r = searchParams.get("range");
     const d = searchParams.get("device");
-    if (r && ["1h", "6h", "24h", "7d"].includes(r)) setRange(r as any);
+    if (r && ["1h", "6h", "24h", "7d"].includes(r))
+      setRange(r as "1h" | "6h" | "24h" | "7d");
     if (d) setUrlDeviceId(d);
   }, []);
   const [isLoading, setIsLoading] = useState(true);
