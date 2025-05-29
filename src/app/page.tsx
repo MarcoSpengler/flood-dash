@@ -40,19 +40,17 @@ export default function Home() {
     lng: number | null;
   }
 
-  // Extract deviceId and range from URL
-  const searchParams = new URLSearchParams(
-    typeof window !== "undefined" ? window.location.search : ""
-  );
-  const urlDeviceId = searchParams.get("device") ?? null;
-  const urlRange = searchParams.get("range");
+  // Delay parsing URL parameters until after hydration to avoid SSR/CSR mismatch
+  const [range, setRange] = useState<"1h" | "6h" | "24h" | "7d">("24h");
+  const [urlDeviceId, setUrlDeviceId] = useState<string | null>(null);
 
-  const [range, setRange] = useState(urlRange);
   useEffect(() => {
-    if (urlRange && ["1h", "6h", "24h", "7d"].includes(urlRange)) {
-      setRange(urlRange);
-    }
-  }, [urlRange]);
+    const searchParams = new URLSearchParams(window.location.search);
+    const r = searchParams.get("range");
+    const d = searchParams.get("device");
+    if (r && ["1h", "6h", "24h", "7d"].includes(r)) setRange(r as any);
+    if (d) setUrlDeviceId(d);
+  }, []);
   const [isLoading, setIsLoading] = useState(true);
   const [devices, setDevices] = useState<Device[]>([]);
   const [waterLevels, setWaterLevels] = useState<Record<string, WaterLevel[]>>(
