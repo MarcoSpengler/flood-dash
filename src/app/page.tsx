@@ -35,13 +35,24 @@ export default function Home() {
   interface Device {
     device_id: string;
     name: string | null;
-    location: string | null;
     offset_mm: number;
     lat: number | null;
     lng: number | null;
   }
 
-  const [range, setRange] = useState<"1h" | "6h" | "24h" | "7d">("24h");
+  // Extract deviceId and range from URL
+  const searchParams = new URLSearchParams(
+    typeof window !== "undefined" ? window.location.search : ""
+  );
+  const urlDeviceId = searchParams.get("device") ?? null;
+  const urlRange = searchParams.get("range");
+
+  const [range, setRange] = useState(urlRange);
+  useEffect(() => {
+    if (urlRange && ["1h", "6h", "24h", "7d"].includes(urlRange)) {
+      setRange(urlRange);
+    }
+  }, [urlRange]);
   const [isLoading, setIsLoading] = useState(true);
   const [devices, setDevices] = useState<Device[]>([]);
   const [waterLevels, setWaterLevels] = useState<Record<string, WaterLevel[]>>(
@@ -74,6 +85,7 @@ export default function Home() {
       const fromDate = getFromDate();
 
       for (const device of deviceData || []) {
+        if (urlDeviceId && device.device_id !== urlDeviceId) continue;
         const { data: wlData, error: wlError } = await supabase
           .from("water_levels")
           .select("*")
@@ -93,10 +105,13 @@ export default function Home() {
     };
 
     fetchAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getFromDate]);
 
   const handleShare: (deviceId: string) => Promise<void> = async (deviceId) => {
-    const url = `${window.location.origin}/sensor/${deviceId}?range=${range}`;
+    const url =
+      (typeof window !== "undefined" ? window.location.origin : "") +
+      `/?device=${deviceId}&range=${range}`;
     try {
       await navigator.clipboard.writeText(url);
       toast.success("Link copied to clipboard!");
@@ -205,96 +220,101 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          devices.map((sensor) => {
-            const data = waterLevels[sensor.device_id] || [];
-            const adjustedData = data.map((d) => ({
-              ...d,
-              water_level:
-                sensor.offset_mm !== 0
-                  ? d.water_level - sensor.offset_mm
-                  : d.water_level,
-            }));
+          (() => {
+            const displayedDevices = urlDeviceId
+              ? devices.filter((d) => d.device_id === urlDeviceId)
+              : devices;
+            return displayedDevices.map((sensor) => {
+              const data = waterLevels[sensor.device_id] || [];
+              const adjustedData = data.map((d) => ({
+                ...d,
+                water_level:
+                  sensor.offset_mm !== 0
+                    ? d.water_level - sensor.offset_mm
+                    : d.water_level,
+              }));
 
-            const latestLevel =
-              adjustedData.length > 0
-                ? adjustedData[adjustedData.length - 1].water_level
-                : null;
+              const latestLevel =
+                adjustedData.length > 0
+                  ? adjustedData[adjustedData.length - 1].water_level
+                  : null;
 
-            const chartData = {
-              labels: adjustedData.map((d) => new Date(d.created_at)),
-              datasets: [
-                {
-                  label: "Water Level (mm)",
-                  data: adjustedData.map((d) => d.water_level),
-                  fill: true,
-                  borderColor: "rgb(59, 130, 246)",
-                  backgroundColor: "rgba(59, 130, 246, 0.1)",
-                  tension: 0.6,
-                  borderWidth: 2,
-                  cubicInterpolationMode: "monotone" as const,
-                  pointRadius: 2,
-                  pointHitRadius: 8,
-                },
-              ],
-            };
+              const chartData = {
+                labels: adjustedData.map((d) => new Date(d.created_at)),
+                datasets: [
+                  {
+                    label: "Water Level (mm)",
+                    data: adjustedData.map((d) => d.water_level),
+                    fill: true,
+                    borderColor: "rgb(59, 130, 246)",
+                    backgroundColor: "rgba(59, 130, 246, 0.1)",
+                    tension: 0.6,
+                    borderWidth: 2,
+                    cubicInterpolationMode: "monotone" as const,
+                    pointRadius: 2,
+                    pointHitRadius: 8,
+                  },
+                ],
+              };
 
-            return (
-              <Card key={sensor.device_id} className="border-2 shadow-lg">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                  <div className="space-y-1">
-                    <CardTitle className="text-2xl font-bold flex items-center gap-2">
-                      <Droplets className="h-6 w-6 text-blue-500" />
-                      {sensor.name || sensor.device_id}
-                    </CardTitle>
-                    {sensor.lat !== null && sensor.lng !== null && (
-                      <button
-                        onClick={() =>
-                          window.open(
-                            `https://www.google.com/maps?q=${sensor.lat},${sensor.lng}`,
-                            "_blank"
-                          )
-                        }
-                        className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-sm"
+              return (
+                <Card key={sensor.device_id} className="border-2 shadow-lg">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                    <div className="space-y-1">
+                      <CardTitle className="text-2xl font-bold flex items-center gap-2">
+                        <Droplets className="h-6 w-6 text-blue-500" />
+                        {sensor.name || sensor.device_id}
+                      </CardTitle>
+                      {sensor.lat !== null && sensor.lng !== null && (
+                        <button
+                          onClick={() =>
+                            window.open(
+                              `https://www.google.com/maps?q=${sensor.lat},${sensor.lng}`,
+                              "_blank"
+                            )
+                          }
+                          className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-sm"
+                        >
+                          <MapPin className="h-4 w-4" />({sensor.lat.toFixed(5)}
+                          , {sensor.lng.toFixed(5)})
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        onClick={() => handleShare(sensor.device_id)}
                       >
-                        <MapPin className="h-4 w-4" />({sensor.lat.toFixed(5)},{" "}
-                        {sensor.lng.toFixed(5)})
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-1"
-                      onClick={() => handleShare(sensor.device_id)}
-                    >
-                      <Share2 className="h-4 w-4" />
-                      Share
-                    </Button>
-                    {latestLevel !== null && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <ArrowUpDown className="h-4 w-4 text-blue-500" />
-                        <span className="font-medium">
-                          {latestLevel.toFixed(2)}mm
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[400px] w-full">
-                    {adjustedData.length > 0 ? (
-                      <Line data={chartData} options={options} />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center text-muted-foreground">
-                        No data available
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })
+                        <Share2 className="h-4 w-4" />
+                        Share
+                      </Button>
+                      {latestLevel !== null && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <ArrowUpDown className="h-4 w-4 text-blue-500" />
+                          <span className="font-medium">
+                            {latestLevel.toFixed(2)}mm
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[400px] w-full">
+                      {adjustedData.length > 0 ? (
+                        <Line data={chartData} options={options} />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center text-muted-foreground">
+                          No data available
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            });
+          })()
         )}
       </div>
     </main>
