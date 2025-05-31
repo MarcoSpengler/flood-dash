@@ -304,8 +304,12 @@ export default function Home() {
                       {adjustedData.length > 0 ? (
                         <Line data={chartData} options={options} />
                       ) : (
-                        <div className="h-full w-full flex items-center justify-center text-muted-foreground">
-                          No data available
+                        <div className="h-full w-full flex flex-col items-center justify-center text-center text-muted-foreground p-6">
+                          <Droplets className="w-10 h-10 mb-4 text-blue-300" />
+                          <p className="text-lg font-semibold">No water level data</p>
+                          <p className="text-sm mt-1">
+                            There is no data available for the selected time range.
+                          </p>
                         </div>
                       )}
                     </div>
