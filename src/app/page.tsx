@@ -268,7 +268,7 @@ export default function Home() {
                         <button
                           onClick={() =>
                             window.open(
-                              `https://www.google.com/maps?q=${sensor.lat},${sensor.lng}`,
+                              `https://www.openstreetmap.org/?mlat=${sensor.lat}&mlon=${sensor.lng}#map=16/${sensor.lat}/${sensor.lng}`,
                               "_blank"
                             )
                           }
