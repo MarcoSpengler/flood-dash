@@ -62,7 +62,11 @@ export default function AlarmsEditor() {
     fetchData();
   }, []);
 
-  const handleChange = (index: number, field: keyof Alarm, value: any) => {
+  const handleChange = (
+    index: number,
+    field: keyof Alarm,
+    value: string | number | boolean | null
+  ) => {
     const updated = [...alarms];
     updated[index] = { ...updated[index], [field]: value };
     setAlarms(updated);
