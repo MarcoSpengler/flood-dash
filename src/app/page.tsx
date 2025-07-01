@@ -287,29 +287,20 @@ export default function Home() {
                 : devices;
               return displayedDevices.map((sensor) => {
                 const data = waterLevels[sensor.device_id] || [];
-                const adjustedData = data.map((d) => ({
-                  ...d,
-                  water_level:
-                    sensor.offset_mm !== 0
-                      ? d.water_level - sensor.offset_mm
-                      : d.water_level,
-                }));
 
                 const latestLevel =
-                  adjustedData.length > 0
-                    ? adjustedData[adjustedData.length - 1].water_level
-                    : null;
+                  data.length > 0 ? data[data.length - 1].water_level : null;
 
                 const deviceAlerts = recentAlerts.filter(
                   (alert) => alert.device_id === sensor.device_id
                 );
 
                 const chartData = {
-                  labels: adjustedData.map((d) => new Date(d.created_at)),
+                  labels: data.map((d) => new Date(d.created_at)),
                   datasets: [
                     {
                       label: "Water Level (mm)",
-                      data: adjustedData.map((d) => d.water_level),
+                      data: data.map((d) => d.water_level),
                       fill: true,
                       borderColor: "rgb(59, 130, 246)",
                       backgroundColor: "rgba(59, 130, 246, 0.1)",
@@ -386,7 +377,7 @@ export default function Home() {
                     </CardHeader>
                     <CardContent>
                       <div className="h-[400px] w-full">
-                        {adjustedData.length > 0 ? (
+                        {data.length > 0 ? (
                           <Line data={chartData} options={options} />
                         ) : (
                           <div className="h-full w-full flex flex-col items-center justify-center text-center text-muted-foreground p-6">
